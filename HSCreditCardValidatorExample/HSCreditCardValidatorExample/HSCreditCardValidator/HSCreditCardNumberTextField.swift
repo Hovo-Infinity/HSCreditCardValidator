@@ -11,6 +11,9 @@ import UIKit
 @objc
 protocol HSCreditCardNumberTextFieldDelegate: NSObjectProtocol {
     @objc @available(iOS 2.0, *)
+    optional func creditCardNumberTextField(_ textField: HSCreditCardNumberTextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool // return NO to not change text
+    
+    @objc @available(iOS 2.0, *)
     optional func creditCardNumberTextFieldShouldBeginEditing(_ textField: HSCreditCardNumberTextField) -> Bool // return NO to disallow editing.
     
     @objc @available(iOS 2.0, *)
@@ -142,51 +145,10 @@ class HSCreditCardNumberTextField: UITextField {
 
 extension HSCreditCardNumberTextField: UITextFieldDelegate {
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        let count = (self.unformatedText?.count ?? 0) + string.count
-        if let type = self.cardType {
-            
-            // TO-DO check by type
-            switch type {
-            case .AmericanExpress, .DinersClubInternational:
-                if count > 15 {
-                    return false || string.isEmpty
-                } else {
-                    return true
-                }
-            case .ChinaUnionPay:
-                if count > 19 {
-                    return false || string.isEmpty
-                } else {
-                    return true
-                }
-            case .DinersClubenRoute:
-                if count > 14 {
-                    return false || string.isEmpty
-                } else {
-                    return true
-                }
-            case .Maestro:
-                if count > 19 {
-                    return false || string.isEmpty
-                } else {
-                    return true
-                }
-            case .Visa,.VisaElectron,.MasterCard,.DinersClubUSAndCanada,.DiscoverCard,
-                 .JBC,.Dankort,.BankCard,.MIR, .Arca:
-                if count > 16 {
-                    return false || string.isEmpty
-                } else {
-                    return true
-                }
-            default:
-                if count > 7 {
-                    return false || string.isEmpty
-                } else {
-                    return true
-                }
-            }
+        if self.cardNumberDelegate?.responds(to: #selector(HSCreditCardNumberTextFieldDelegate.creditCardNumberTextField(_:shouldChangeCharactersIn:replacementString:))) == true {
+            return (self.cardNumberDelegate?.creditCardNumberTextField!(self, shouldChangeCharactersIn: range, replacementString: string))!
         }
-        return false || string.isEmpty || count < 6
+        return true
     }
     
     func textFieldDidEndEditing(_ textField: UITextField) {
@@ -238,31 +200,31 @@ extension HSCreditCardValidator {
     static public func image(for type: CreditCardType) -> UIImage {
         switch type {
         case .AmericanExpress:
-            return #imageLiteral(resourceName: "AmEx")
+            return #imageLiteral(resourceName: "ic_american_express")
         case .BankCard:
-            return #imageLiteral(resourceName: "bankcard")
+            return #imageLiteral(resourceName: "ic_bank_card")
         case .ChinaUnionPay:
-            return #imageLiteral(resourceName: "chinaUnionPay")
+            return #imageLiteral(resourceName: "ic_china_union_pay")
         case .Dankort:
-            return #imageLiteral(resourceName: "dankort")
+            return #imageLiteral(resourceName: "ic_dankort")
         case .DinersClubenRoute,.DinersClubInternational, .DinersClubUSAndCanada:
-            return #imageLiteral(resourceName: "dinersClub")
+            return #imageLiteral(resourceName: "ic_diners_cloub")
         case .JBC:
-            return #imageLiteral(resourceName: "jbc")
+            return #imageLiteral(resourceName: "ic_jbc")
         case .Maestro:
-            return #imageLiteral(resourceName: "maestro")
+            return #imageLiteral(resourceName: "ic_maestro")
         case .MIR:
-            return #imageLiteral(resourceName: "mir")
+            return #imageLiteral(resourceName: "ic_mir")
         case .MasterCard:
-            return #imageLiteral(resourceName: "masterCard")
+            return #imageLiteral(resourceName: "master_card_logo")
         case .Visa:
-            return #imageLiteral(resourceName: "visa")
+            return #imageLiteral(resourceName: "ic_visa")
         case .VisaElectron:
-            return #imageLiteral(resourceName: "visaElectron")
+            return #imageLiteral(resourceName: "ic_visa_electron")
         case .Arca:
             return #imageLiteral(resourceName: "ArCa")
         default:
-            return #imageLiteral(resourceName: "unknown")
+            return #imageLiteral(resourceName: "ic_card_unknown")
         }
     }
 }
